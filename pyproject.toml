@@ -15,7 +15,8 @@ dependencies = [
   "pillow>=10.0",
   "torch>=2.3",
   "tqdm>=4.66",
-  "onnx>=1.16"
+  "onnx>=1.16",
+  "onnxscript>=0.4.0"
 ]
 
 [project.optional-dependencies]
@@ -28,4 +29,3 @@ packages = ["world_model_lab"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-

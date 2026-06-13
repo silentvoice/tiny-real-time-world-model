@@ -3,6 +3,6 @@ pillow>=10.0
 torch>=2.3
 tqdm>=4.66
 onnx>=1.16
+onnxscript>=0.4.0
 imageio>=2.34
 onnxruntime>=1.18
-
