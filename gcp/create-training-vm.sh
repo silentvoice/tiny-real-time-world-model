@@ -14,6 +14,8 @@ set -euo pipefail
 : "${MACHINE_TYPE:=g2-standard-8}"
 : "${ACCELERATOR:=type=nvidia-l4,count=1}"
 : "${BOOT_DISK_SIZE:=200GB}"
+: "${IMAGE_FAMILY:=ubuntu-2204-lts}"
+: "${IMAGE_PROJECT:=ubuntu-os-cloud}"
 
 STARTUP_SCRIPT="$(pwd)/gcp/startup-train.sh"
 
@@ -25,8 +27,8 @@ gcloud compute instances create "${INSTANCE_NAME}" \
   --maintenance-policy TERMINATE \
   --provisioning-model SPOT \
   --instance-termination-action STOP \
-  --image-family pytorch-latest-gpu \
-  --image-project deeplearning-platform-release \
+  --image-family "${IMAGE_FAMILY}" \
+  --image-project "${IMAGE_PROJECT}" \
   --boot-disk-size "${BOOT_DISK_SIZE}" \
   --boot-disk-type pd-balanced \
   --service-account "${SERVICE_ACCOUNT_EMAIL}" \
@@ -38,4 +40,3 @@ repo-url="${REPO_URL}",bucket-name="${BUCKET_NAME}",train-steps="${TRAIN_STEPS}"
 echo "created ${INSTANCE_NAME}"
 echo "tail logs with:"
 echo "gcloud compute ssh ${INSTANCE_NAME} --project ${PROJECT_ID} --zone ${ZONE} --command 'tail -f /var/log/startup-script.log'"
-
