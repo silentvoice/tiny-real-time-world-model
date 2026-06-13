@@ -24,6 +24,7 @@ artifacts/
 *.ckpt
 *.safetensors
 *.onnx
+*.onnx.data
 !public/model/.gitkeep
 !public/model/tiny_denoiser.onnx
 

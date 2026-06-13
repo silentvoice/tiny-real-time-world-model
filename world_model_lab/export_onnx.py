@@ -13,7 +13,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export a trained denoiser checkpoint to ONNX.")
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=Path("public/model/tiny_denoiser.onnx"))
-    parser.add_argument("--opset", type=int, default=17)
+    parser.add_argument("--opset", type=int, default=18)
     return parser.parse_args()
 
 
@@ -36,6 +36,7 @@ def main():
         input_names=["input"],
         output_names=["pred"],
         opset_version=args.opset,
+        external_data=False,
         do_constant_folding=True,
     )
 
