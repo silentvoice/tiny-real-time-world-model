@@ -12,6 +12,8 @@ The demo runs as a static web app and can be hosted on GitHub Pages. When a
 trained ONNX model is present, the browser uses ONNX Runtime Web with WebGPU to
 roll the game forward inside the learned model.
 
+Live demo: <https://silentvoice.github.io/tiny-real-time-world-model/>
+
 ## Demo modes
 
 - **Real simulator**: normal Breakout-like game physics in JavaScript.
@@ -29,11 +31,15 @@ npm run dev
 ```
 
 Open the local URL printed by Vite. The simulator works immediately. Neural mode
-is enabled after you place a trained model at:
+is enabled by the included model at:
 
 ```text
 public/model/tiny_denoiser.onnx
 ```
+
+The checked-in model is intentionally small enough to load as a normal static
+asset. It was trained on the included simulator for a compact browser demo, not
+for benchmark-quality rollouts.
 
 ## Train a model
 
@@ -52,11 +58,11 @@ python -m world_model_lab.train --steps 200 --batch-size 16 --checkpoint-dir che
 python -m world_model_lab.export_onnx --checkpoint checkpoints/smoke/last.pt --output public/model/tiny_denoiser.onnx
 ```
 
-For a useful model, train on a GPU:
+For a useful browser model, train on a GPU:
 
 ```bash
 python -m world_model_lab.train \
-  --steps 40000 \
+  --steps 5000 \
   --batch-size 128 \
   --width 96 \
   --blocks 14 \
@@ -103,4 +109,3 @@ See [gcp/README.md](gcp/README.md).
 ## License
 
 MIT
-
