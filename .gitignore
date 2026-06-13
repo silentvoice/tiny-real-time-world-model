@@ -25,6 +25,7 @@ artifacts/
 *.safetensors
 *.onnx
 !public/model/.gitkeep
+!public/model/tiny_denoiser.onnx
 
 # Cloud/local credentials. Do not commit service account keys.
 *.json.key

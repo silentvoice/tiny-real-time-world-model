@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     width = int(checkpoint.get("width", 96))
     blocks = int(checkpoint.get("blocks", 14))
 
@@ -46,4 +46,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -80,6 +80,9 @@ def save_checkpoint(
     step: int,
     args: argparse.Namespace,
 ):
+    checkpoint_args = {
+        key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()
+    }
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
         {
@@ -88,7 +91,7 @@ def save_checkpoint(
             "step": step,
             "width": args.width,
             "blocks": args.blocks,
-            "args": vars(args),
+            "args": checkpoint_args,
         },
         path,
     )
@@ -195,4 +198,3 @@ def main():
 if __name__ == "__main__":
     os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
     main()
-

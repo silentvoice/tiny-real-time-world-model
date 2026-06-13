@@ -65,7 +65,7 @@ def sample_next(
 def main():
     args = parse_args()
     device = torch.device(args.device)
-    checkpoint = torch.load(args.checkpoint, map_location="cpu")
+    checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     model = TinyDenoiser(width=int(checkpoint["width"]), blocks=int(checkpoint["blocks"])).to(device)
     model.load_state_dict(checkpoint["model"])
     model.eval()
@@ -98,4 +98,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
