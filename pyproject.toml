@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiny-real-time-world-model"
+version = "0.1.0"
+description = "Training and export tools for a tiny browser-playable diffusion world model."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ankur Bulsara" }]
+dependencies = [
+  "numpy>=1.26",
+  "pillow>=10.0",
+  "torch>=2.3",
+  "tqdm>=4.66",
+  "onnx>=1.16"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+eval = ["imageio>=2.34", "onnxruntime>=1.18"]
+
+[tool.setuptools]
+packages = ["world_model_lab"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+

@@ -1,0 +1,37 @@
+.DS_Store
+node_modules/
+.npm-cache/
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pycache/
+.venv/
+venv/
+
+# Model artifacts and training output
+checkpoints/
+runs/
+artifacts/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+!public/model/.gitkeep
+
+# Cloud/local credentials. Do not commit service account keys.
+*.json.key
+*service-account*.json
+gcp-key*.json
+
+# Local verification artifacts
+.playwright-cli/
+output/playwright/
+.cache/
