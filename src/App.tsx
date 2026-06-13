@@ -43,7 +43,7 @@ export default function App() {
   const keysRef = useRef(new Set<string>());
   const runningRef = useRef(true);
   const modeRef = useRef<Mode>("sim");
-  const stepsRef = useRef(3);
+  const stepsRef = useRef(2);
   const sigmaRef = useRef(1.0);
   const busyRef = useRef(false);
   const lastFrameAtRef = useRef(performance.now());
@@ -51,7 +51,7 @@ export default function App() {
   const [mode, setMode] = useState<Mode>("sim");
   const [running, setRunning] = useState(true);
   const [modelState, setModelState] = useState<ModelState>("loading");
-  const [denoiseSteps, setDenoiseSteps] = useState(3);
+  const [denoiseSteps, setDenoiseSteps] = useState(2);
   const [sigma, setSigma] = useState(1.0);
   const [fps, setFps] = useState(0);
   const [actionLabel, setActionLabel] = useState("noop");
