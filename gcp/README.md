@@ -15,6 +15,8 @@ bash gcp/bootstrap.sh
 
 The bootstrap script enables required APIs, creates a service account if needed,
 grants storage/logging permissions, and creates a GCS bucket for model artifacts.
+Set `SERVICE_ACCOUNT_PROJECT_ROLE` only when your own sandbox requires broader
+project-level permissions.
 
 ## Launch a training VM
 
@@ -53,4 +55,3 @@ Then build and publish the GitHub Pages app.
 - Checkpoint frequently.
 - Stop or delete the VM after training.
 - Keep model artifacts in GCS; do not commit large checkpoints.
-

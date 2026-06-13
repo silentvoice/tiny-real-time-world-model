@@ -5,6 +5,7 @@ set -euo pipefail
 : "${REGION:=us-central1}"
 : "${SERVICE_ACCOUNT_NAME:=tiny-world-model-runner}"
 : "${BUCKET_NAME:=${PROJECT_ID}-tiny-world-model}"
+: "${SERVICE_ACCOUNT_PROJECT_ROLE:=}"
 
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 MEMBER="serviceAccount:${SERVICE_ACCOUNT_EMAIL}"
@@ -38,6 +39,13 @@ for role in \
     --condition=None >/dev/null
 done
 
+if [[ -n "${SERVICE_ACCOUNT_PROJECT_ROLE}" ]]; then
+  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+    --member "${MEMBER}" \
+    --role "${SERVICE_ACCOUNT_PROJECT_ROLE}" \
+    --condition=None >/dev/null
+fi
+
 if ! gcloud storage buckets describe "gs://${BUCKET_NAME}" --project "${PROJECT_ID}" >/dev/null 2>&1; then
   gcloud storage buckets create "gs://${BUCKET_NAME}" \
     --project "${PROJECT_ID}" \
@@ -46,4 +54,3 @@ if ! gcloud storage buckets describe "gs://${BUCKET_NAME}" --project "${PROJECT_
 fi
 
 echo "bootstrap complete"
-
