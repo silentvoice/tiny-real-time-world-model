@@ -17,6 +17,7 @@ WORKDIR="/opt/tiny-real-time-world-model"
 CHECKPOINT_DIR="${WORKDIR}/checkpoints/tiny-denoiser"
 MODEL_PATH="${WORKDIR}/public/model/tiny_denoiser.onnx"
 DONE_MARKER="/opt/tiny-world-model-training-done"
+LOG_DIR="${WORKDIR}/logs"
 
 if test -f "${DONE_MARKER}"; then
   echo "training already completed"
@@ -48,6 +49,7 @@ sudo rm -rf "${WORKDIR}"
 sudo git clone "${REPO_URL}" "${WORKDIR}"
 sudo chown -R "$(id -u):$(id -g)" "${WORKDIR}"
 cd "${WORKDIR}"
+mkdir -p "${LOG_DIR}"
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -60,28 +62,32 @@ if not torch.cuda.is_available():
     raise SystemExit("CUDA is not available")
 PY
 
-python -m world_model_lab.train \
+python -u -m world_model_lab.train \
   --steps "${TRAIN_STEPS}" \
   --batch-size "${BATCH_SIZE}" \
   --width "${MODEL_WIDTH}" \
   --blocks "${MODEL_BLOCKS}" \
   --checkpoint-dir "${CHECKPOINT_DIR}" \
   --save-every 1000 \
-  --sample-every 1000
+  --sample-every 1000 \
+  > "${LOG_DIR}/train.log" 2>&1
 
 python -m world_model_lab.export_onnx \
   --checkpoint "${CHECKPOINT_DIR}/last.pt" \
-  --output "${MODEL_PATH}"
+  --output "${MODEL_PATH}" \
+  > "${LOG_DIR}/export.log" 2>&1
 
 python -m world_model_lab.eval_rollout \
   --checkpoint "${CHECKPOINT_DIR}/last.pt" \
   --output "${WORKDIR}/artifacts/rollout.gif" \
-  --steps 160
+  --steps 160 \
+  > "${LOG_DIR}/eval.log" 2>&1
 
 gcloud storage cp "${MODEL_PATH}" "gs://${BUCKET_NAME}/latest/tiny_denoiser.onnx"
 gcloud storage cp "${WORKDIR}/artifacts/rollout.gif" "gs://${BUCKET_NAME}/latest/rollout.gif"
 gcloud storage cp "${CHECKPOINT_DIR}/last.pt" "gs://${BUCKET_NAME}/checkpoints/last.pt"
 gcloud storage cp --recursive "${CHECKPOINT_DIR}/samples" "gs://${BUCKET_NAME}/samples"
+gcloud storage cp --recursive "${LOG_DIR}" "gs://${BUCKET_NAME}/logs"
 
 sudo touch "${DONE_MARKER}"
 echo "training complete"
