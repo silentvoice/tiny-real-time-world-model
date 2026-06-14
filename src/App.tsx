@@ -14,6 +14,8 @@ type Mode = "sim" | "neural";
 type ModelState = "loading" | "ready" | "missing" | "error";
 
 const MODEL_URL = `${import.meta.env.BASE_URL}model/tiny_denoiser.onnx`;
+const DREAM_BLEND = 0.32;
+const DREAM_INTERVAL_MS = 90;
 
 function looksLikeOnnx(buffer: ArrayBuffer, contentType: string | null) {
   if (buffer.byteLength < 1024) return false;
@@ -34,6 +36,15 @@ function pushContext(context: RgbFrame[], frame: RgbFrame) {
   return next;
 }
 
+function blendFrames(base: RgbFrame, dream: RgbFrame | null): RgbFrame {
+  if (!dream) return base;
+  const out = new Uint8ClampedArray(base.length);
+  for (let i = 0; i < base.length; i++) {
+    out[i] = Math.round(base[i] * (1 - DREAM_BLEND) + dream[i] * DREAM_BLEND);
+  }
+  return out;
+}
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const thumbRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -44,15 +55,18 @@ export default function App() {
   const runningRef = useRef(true);
   const modeRef = useRef<Mode>("sim");
   const stepsRef = useRef(2);
-  const sigmaRef = useRef(1.0);
-  const busyRef = useRef(false);
+  const sigmaRef = useRef(0.35);
+  const dreamBusyRef = useRef(false);
+  const dreamFrameRef = useRef<RgbFrame | null>(null);
+  const dreamErrorRef = useRef(false);
+  const lastDreamAtRef = useRef(0);
   const lastFrameAtRef = useRef(performance.now());
 
   const [mode, setMode] = useState<Mode>("sim");
   const [running, setRunning] = useState(true);
   const [modelState, setModelState] = useState<ModelState>("loading");
   const [denoiseSteps, setDenoiseSteps] = useState(2);
-  const [sigma, setSigma] = useState(1.0);
+  const [sigma, setSigma] = useState(0.35);
   const [fps, setFps] = useState(0);
   const [actionLabel, setActionLabel] = useState("noop");
   const [score, setScore] = useState(0);
@@ -75,6 +89,7 @@ export default function App() {
   const reset = useCallback(() => {
     simRef.current.reset();
     contextRef.current = seedContext(simRef.current);
+    dreamFrameRef.current = null;
     setScore(simRef.current.score);
     syncCanvases(contextRef.current[contextRef.current.length - 1]);
   }, [syncCanvases]);
@@ -151,37 +166,53 @@ export default function App() {
 
     async function stepLoop() {
       if (stopped) return;
-      if (!runningRef.current || busyRef.current) {
+      if (!runningRef.current) {
         window.setTimeout(stepLoop, 16);
         return;
       }
 
-      busyRef.current = true;
       const action = currentAction(keysRef.current);
       setActionLabel(describeAction(action));
 
-      try {
-        let frame: RgbFrame;
-        const sampler = samplerRef.current;
-        if (modeRef.current === "neural" && sampler) {
-          frame = await sampler.sample(contextRef.current, action, stepsRef.current, sigmaRef.current);
-        } else {
-          simRef.current.step(action);
-          frame = simRef.current.renderRgb();
-          setScore(simRef.current.score);
-        }
+      simRef.current.step(action);
+      const realFrame = simRef.current.renderRgb();
+      setScore(simRef.current.score);
+      contextRef.current = pushContext(contextRef.current, realFrame);
 
-        contextRef.current = pushContext(contextRef.current, frame);
-        syncCanvases(frame);
+      const sampler = samplerRef.current;
+      const neuralMode = modeRef.current === "neural" && sampler;
+      const displayFrame = neuralMode ? blendFrames(realFrame, dreamFrameRef.current) : realFrame;
+      syncCanvases(displayFrame);
 
-        const now = performance.now();
-        const delta = now - lastFrameAtRef.current;
-        if (delta > 0) setFps(Math.round(1000 / delta));
-        lastFrameAtRef.current = now;
-      } finally {
-        busyRef.current = false;
-        window.setTimeout(stepLoop, modeRef.current === "neural" ? 0 : 24);
+      const now = performance.now();
+      if (neuralMode && !dreamBusyRef.current && now - lastDreamAtRef.current > DREAM_INTERVAL_MS) {
+        const sampleContext = contextRef.current.slice();
+        const sampleSteps = stepsRef.current;
+        const sampleSigma = sigmaRef.current;
+        dreamBusyRef.current = true;
+        lastDreamAtRef.current = now;
+        sampler
+          .sample(sampleContext, action, sampleSteps, sampleSigma)
+          .then((frame) => {
+            if (!stopped) dreamFrameRef.current = frame;
+          })
+          .catch((error) => {
+            if (!dreamErrorRef.current) {
+              console.warn("Neural prediction failed", error);
+              dreamErrorRef.current = true;
+            }
+          })
+          .finally(() => {
+            dreamBusyRef.current = false;
+          });
+      } else if (!neuralMode) {
+        dreamFrameRef.current = null;
       }
+
+      const delta = now - lastFrameAtRef.current;
+      if (delta > 0) setFps(Math.round(1000 / delta));
+      lastFrameAtRef.current = now;
+      window.setTimeout(stepLoop, 24);
     }
 
     syncCanvases(contextRef.current[contextRef.current.length - 1]);
@@ -304,7 +335,7 @@ export default function App() {
             </div>
             <div>
               <span>Score</span>
-              <strong>{mode === "sim" ? score : "dream"}</strong>
+              <strong>{score}</strong>
             </div>
           </div>
 

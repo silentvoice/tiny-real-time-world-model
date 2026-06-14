@@ -27,6 +27,12 @@ function rgbToFloat(frame: RgbFrame, out: Float32Array, channelOffset: number) {
   }
 }
 
+function rgbToModelFrame(frame: RgbFrame): Float32Array {
+  const out = new Float32Array(3 * FRAME_WIDTH * FRAME_HEIGHT);
+  rgbToFloat(frame, out, 0);
+  return out;
+}
+
 function floatToRgb(frame: Float32Array): RgbFrame {
   const out = new Uint8ClampedArray(RGB_SIZE);
   const plane = FRAME_WIDTH * FRAME_HEIGHT;
@@ -99,9 +105,9 @@ export class DiffusionSampler {
     maxSigma: number
   ): Promise<RgbFrame> {
     const plane = FRAME_WIDTH * FRAME_HEIGHT;
-    let current = new Float32Array(3 * plane);
+    let current = rgbToModelFrame(context[context.length - 1]);
     for (let i = 0; i < current.length; i++) {
-      current[i] = normalSample() * maxSigma;
+      current[i] += normalSample() * maxSigma;
     }
 
     const schedule = makeSchedule(denoiseSteps, maxSigma);

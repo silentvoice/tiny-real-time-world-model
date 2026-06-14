@@ -9,19 +9,21 @@ The project has two parts:
   frame from recent frames and keyboard input
 
 The demo runs as a static web app and can be hosted on GitHub Pages. When a
-trained ONNX model is present, the browser uses ONNX Runtime Web with WebGPU to
-roll the game forward inside the learned model.
+trained ONNX model is present, the browser uses ONNX Runtime Web with WebGPU or
+WASM to predict a live neural dream layer while the game remains playable.
 
 Live demo: <https://silentvoice.github.io/tiny-real-time-world-model/>
 
 ## Demo modes
 
 - **Real simulator**: normal Breakout-like game physics in JavaScript.
-- **Neural world**: the exported diffusion model predicts the next frame from
-  the last four frames and the current action.
+- **Neural world**: the game remains responsive, and the exported diffusion
+  model continuously predicts a noisy next-frame layer from the last four frames
+  and the current action.
 
-Neural mode is intentionally imperfect. Long rollouts drift, unusual controls
-produce strange states, and the demo makes those failure modes visible.
+Neural mode is intentionally imperfect. The tiny model still drifts and invents
+artifacts, but controls, score, and collisions stay live so the demo feels like a
+game instead of a slow autonomous rollout.
 
 ## Quick start
 
@@ -86,9 +88,10 @@ During training, Gaussian noise is added to the target frame. The model receives
 the noisy target, the context frames, the action encoded as image planes, and a
 noise-level plane. It learns to predict the clean next frame.
 
-At inference time, the browser starts from random noise and runs a short
-deterministic denoising schedule. The final predicted frame becomes part of the
-context window for the next keyboard action.
+At inference time, the browser warm-starts from the latest context frame plus
+noise and runs a short deterministic denoising schedule. The app blends that
+prediction over the live simulator so keyboard control stays responsive even
+when model inference is slow.
 
 ## Repository layout
 

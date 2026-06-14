@@ -47,7 +47,9 @@ def sample_next(
     sigma_max: float,
     device: torch.device,
 ) -> np.ndarray:
-    current = torch.randn((1, 3, FRAME_HEIGHT, FRAME_WIDTH), device=device) * sigma_max
+    current = to_tensor(context[-1], device) + torch.randn(
+        (1, 3, FRAME_HEIGHT, FRAME_WIDTH), device=device
+    ) * sigma_max
     sigmas = np.geomspace(sigma_max, 0.02, max(1, denoise_steps)).tolist() + [0.0]
     ctx = context_tensor(context, device)
     actions = torch.tensor([action], device=device, dtype=torch.long)
